@@ -1,0 +1,123 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import { languages, localizedPath, type Lang, ui } from "../lib/i18n";
+
+type NavItem = { slug: string; title: string; order: number };
+type Props = {
+  title: string;
+  nav: NavItem[];
+  currentSlug?: string;
+  lang?: Lang;
+};
+
+const { title, nav, currentSlug, lang = "en" } = Astro.props;
+const labels = ui[lang];
+const otherLang = lang === "en" ? "vi" : "en";
+const quickGuides = [
+  { slug: "university-posting-guide", label: labels.universityGuide },
+  { slug: "club-posting-guide", label: labels.clubGuide },
+  { slug: "sponsor-posting-guide", label: labels.sponsorGuide },
+  { slug: "partner-posting-guide", label: labels.partnerGuide },
+];
+---
+
+<BaseLayout title={title} lang={lang}>
+  <div class="plan-shell mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+    <div class="plan-topbar flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5">
+      <a href={localizedPath("/", lang)} class="plan-home-link inline-flex h-9 items-center rounded-[8px] px-3 text-sm font-bold text-slate-700 transition hover:bg-white hover:text-slate-950">
+        {labels.home}
+      </a>
+      <div class="plan-actions flex flex-wrap items-center justify-end gap-2">
+        <a href={localizedPath("/plan", lang)} class="inline-flex h-9 items-center rounded-[8px] bg-white px-3 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:text-slate-950">
+          {labels.planIndex}
+        </a>
+        <details class="quick-guide-menu relative">
+          <summary class="inline-flex h-9 cursor-pointer list-none items-center rounded-[8px] bg-white px-3 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition hover:text-slate-950">
+            {labels.quickGuides}
+          </summary>
+          <div class="quick-guide-panel absolute right-0 z-20 mt-2 grid w-56 gap-1 rounded-[8px] border border-slate-200 bg-white p-2 shadow-lg">
+            {quickGuides.map((guide) => (
+              <a
+                href={localizedPath(`/plan/${guide.slug}`, lang)}
+                class:list={[
+                  "rounded-[8px] px-3 py-2 text-sm font-bold transition",
+                  guide.slug === currentSlug
+                    ? "bg-slate-950 text-white"
+                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-950",
+                ]}
+              >
+                {guide.label}
+              </a>
+            ))}
+          </div>
+        </details>
+        <a href={localizedPath(Astro.url.pathname.replace(/^\/vi/, ""), otherLang)} class="inline-flex h-9 items-center rounded-[8px] px-3 text-sm font-bold text-sky-700 transition hover:bg-white">
+          {languages[otherLang]}
+        </a>
+      </div>
+    </div>
+
+    <div class="plan-hero py-8">
+      <p class="text-sm font-bold uppercase tracking-[0.16em] text-sky-700">
+        UniHackfest 2026
+      </p>
+      <h1 class="mt-3 max-w-4xl text-3xl font-black tracking-tight text-slate-950 sm:text-5xl">
+        {labels.contentPlan}
+      </h1>
+    </div>
+
+    <div class="plan-grid grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <aside class="lg:sticky lg:top-6 lg:self-start">
+        <details class="plan-sidebar rounded-[8px] border border-slate-200 bg-white shadow-sm lg:open" open>
+          <summary class="cursor-pointer list-none px-4 py-4 text-sm font-black uppercase tracking-[0.12em] text-slate-600">
+            {labels.contents}
+          </summary>
+          <div class="border-t border-slate-100 px-3 py-3">
+            <nav class="plan-sidebar-nav max-h-[70dvh] space-y-1 overflow-auto pr-1">
+              {nav
+                .sort((a, b) => a.order - b.order)
+                .map((item) => (
+                  <a
+                    href={localizedPath(`/plan/${item.slug}`, lang)}
+                    class:list={[
+                      "grid grid-cols-[36px_1fr] items-start gap-2 rounded-[8px] px-3 py-2.5 text-sm leading-snug transition",
+                      item.slug === currentSlug
+                        ? "bg-slate-950 font-bold text-white"
+                        : "text-slate-700 hover:bg-slate-50 hover:text-slate-950",
+                    ]}
+                  >
+                    <span
+                      class:list={[
+                        "tabular-nums",
+                        item.slug === currentSlug ? "text-slate-300" : "text-slate-500",
+                      ]}
+                    >
+                      {item.order}
+                    </span>
+                    <span>{item.title}</span>
+                  </a>
+                ))}
+            </nav>
+          </div>
+        </details>
+      </aside>
+
+      <main class="plan-main min-w-0 rounded-[8px] border border-slate-200 bg-white px-5 py-6 shadow-sm sm:px-8 sm:py-8">
+        <article class="content-prose max-w-none">
+          <slot />
+        </article>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const sidebar = document.querySelector(".plan-sidebar");
+    const syncSidebarState = () => {
+      if (!(sidebar instanceof HTMLDetailsElement)) return;
+      sidebar.open = window.matchMedia("(min-width: 1024px)").matches;
+    };
+
+    syncSidebarState();
+    window.addEventListener("resize", syncSidebarState);
+  </script>
+</BaseLayout>

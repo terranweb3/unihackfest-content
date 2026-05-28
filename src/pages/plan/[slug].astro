@@ -1,0 +1,27 @@
+---
+import { getCollection, render } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import PlanLayout from "../../layouts/PlanLayout.astro";
+import { ui } from "../../lib/i18n";
+
+const lang = "en";
+
+export async function getStaticPaths() {
+  const entries = (await getCollection("unihackfestPlan")) as CollectionEntry<"unihackfestPlan">[];
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props as { entry: CollectionEntry<"unihackfestPlan"> };
+const { Content } = await render(entry);
+
+const entries = (await getCollection("unihackfestPlan")) as CollectionEntry<"unihackfestPlan">[];
+const nav = entries.map((e) => ({
+  slug: e.id,
+  title: e.data.title,
+  order: e.data.order,
+}));
+---
+
+<PlanLayout title={`${entry.data.title} | ${ui[lang].contentPlan}`} nav={nav} currentSlug={entry.id} lang={lang}>
+  <Content />
+</PlanLayout>

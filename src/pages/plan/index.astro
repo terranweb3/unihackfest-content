@@ -1,0 +1,63 @@
+---
+import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import PlanLayout from "../../layouts/PlanLayout.astro";
+import { localizedPath, ui } from "../../lib/i18n";
+
+const lang = "en";
+const labels = ui[lang];
+
+const entries = (await getCollection("unihackfestPlan")) as CollectionEntry<"unihackfestPlan">[];
+const nav = entries.map((e) => ({
+  slug: e.id,
+  title: e.data.title,
+  order: e.data.order,
+}));
+
+const ordered = [...entries].sort((a, b) => a.data.order - b.data.order);
+const coreSections = ordered.filter((e) => e.data.order < 19);
+const roleGuides = ordered.filter((e) => e.data.order >= 19);
+---
+
+<PlanLayout title={labels.title} nav={nav} lang={lang}>
+  <h1>{labels.title}</h1>
+  <p>
+    {labels.planIntro}
+  </p>
+
+  <section class="reading-guide">
+    <h2>{labels.readingGuide}</h2>
+    <div class="guide-grid">
+      <a href={localizedPath("/plan/strategic-context", lang)}>
+        <strong>{labels.readStartTitle}</strong>
+        <span>{labels.readStartBody}</span>
+      </a>
+      <a href={localizedPath("/plan/university-posting-guide", lang)}>
+        <strong>{labels.readRoleTitle}</strong>
+        <span>{labels.readRoleBody}</span>
+      </a>
+      <a href={localizedPath("/plan/campaign-timeline", lang)}>
+        <strong>{labels.readExecutionTitle}</strong>
+        <span>{labels.readExecutionBody}</span>
+      </a>
+    </div>
+  </section>
+
+  <h2>{labels.roleGuides}</h2>
+  <ol>
+    {roleGuides.map((e) => (
+      <li>
+        <a href={localizedPath(`/plan/${e.id}`, lang)}>{e.data.title}</a>
+      </li>
+    ))}
+  </ol>
+
+  <h2>{labels.coreSections}</h2>
+  <ol>
+    {coreSections.map((e) => (
+      <li>
+        <a href={localizedPath(`/plan/${e.id}`, lang)}>{e.data.title}</a>
+      </li>
+    ))}
+  </ol>
+</PlanLayout>

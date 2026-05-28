@@ -1,0 +1,115 @@
+---
+import "../styles/global.css";
+import { localizedPath, type Lang, ui } from "../lib/i18n";
+
+type Props = {
+  title: string;
+  lang?: Lang;
+};
+
+const { title, lang = "en" } = Astro.props;
+const accessPassword = "unihackfest2026";
+const labels = ui[lang];
+const basePath = Astro.url.pathname.replace(/^\/vi(?=\/|$)/, "") || "/";
+---
+
+<html lang={lang} class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width" />
+	    <meta name="generator" content={Astro.generator} />
+	    <title>{title}</title>
+    <link rel="alternate" hreflang="en" href={localizedPath(basePath, "en")} />
+    <link rel="alternate" hreflang="vi" href={localizedPath(basePath, "vi")} />
+	    <script define:vars={{ accessPassword }}>
+      const authKey = "unihackfest-content-auth";
+      if (sessionStorage.getItem(authKey) !== accessPassword) {
+        document.documentElement.classList.add("is-locked");
+      }
+    </script>
+  </head>
+  <body class="min-h-full bg-[#f7f9fc] text-slate-900 antialiased">
+    <div id="site-content">
+      <slot />
+    </div>
+
+    <div
+      id="password-gate"
+      class="fixed inset-0 z-50 hidden min-h-dvh items-center justify-center bg-slate-950 px-4 text-white"
+      aria-modal="true"
+      role="dialog"
+      aria-labelledby="password-title"
+    >
+      <div class="w-full max-w-sm rounded-[8px] border border-white/10 bg-white p-5 text-slate-950 shadow-2xl sm:p-6">
+        <div class="inline-flex h-10 w-10 items-center justify-center rounded-[8px] bg-slate-950 text-white">
+          <span aria-hidden="true" class="text-lg font-bold">U</span>
+        </div>
+        <h1 id="password-title" class="mt-5 text-2xl font-bold tracking-tight">
+          UniHackfest Content Plan
+        </h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">
+          {labels.passwordBody}
+        </p>
+
+        <form id="password-form" class="mt-6 space-y-3">
+          <label for="password-input" class="text-sm font-semibold text-slate-700">
+            {labels.passwordLabel}
+          </label>
+          <input
+            id="password-input"
+            type="password"
+            autocomplete="current-password"
+            class="h-11 w-full rounded-[8px] border border-slate-300 bg-white px-3 text-base text-slate-950 outline-none transition focus:border-slate-950 focus:ring-4 focus:ring-slate-200"
+            placeholder={labels.passwordPlaceholder}
+          />
+          <p id="password-error" class="hidden text-sm font-medium text-red-600">
+            {labels.passwordError}
+          </p>
+          <button
+            type="submit"
+            class="h-11 w-full rounded-[8px] bg-slate-950 px-4 text-sm font-bold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-300"
+          >
+            {labels.passwordSubmit}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <script define:vars={{ accessPassword }}>
+      const authKey = "unihackfest-content-auth";
+      const gate = document.querySelector("#password-gate");
+      const form = document.querySelector("#password-form");
+      const input = document.querySelector("#password-input");
+      const error = document.querySelector("#password-error");
+
+      function unlock() {
+        document.documentElement.classList.remove("is-locked");
+        gate?.classList.add("hidden");
+        gate?.classList.remove("flex");
+      }
+
+      if (sessionStorage.getItem(authKey) === accessPassword) {
+        unlock();
+      } else {
+        gate?.classList.remove("hidden");
+        gate?.classList.add("flex");
+        setTimeout(() => input?.focus(), 50);
+      }
+
+      form?.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (input?.value === accessPassword) {
+          sessionStorage.setItem(authKey, accessPassword);
+          unlock();
+          return;
+        }
+
+        error?.classList.remove("hidden");
+        input?.setAttribute("aria-invalid", "true");
+        input?.focus();
+      });
+    </script>
+  </body>
+</html>
